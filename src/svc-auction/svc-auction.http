@@ -1,0 +1,6 @@
+@svc_auction_HostAddress = http://localhost:5028
+
+GET {{svc_auction_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
