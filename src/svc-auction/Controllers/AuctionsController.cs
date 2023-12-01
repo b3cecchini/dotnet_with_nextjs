@@ -5,6 +5,8 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using AutoMapper;
 using AutoMapper.QueryableExtensions;
+using Contracts;
+using MassTransit;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Internal;
@@ -22,10 +24,13 @@ public class AuctionsController : ControllerBase
 
     private readonly IMapper _mapper;
 
-    public AuctionsController(AuctionDbContext context, IMapper mapper) 
+    private readonly IPublishEndpoint _publishEndpoint;
+
+    public AuctionsController(AuctionDbContext context, IMapper mapper, IPublishEndpoint publishEndpoint) 
     {
         this._context = context;
         this._mapper = mapper;
+        this._publishEndpoint = publishEndpoint;
     }
 
     [HttpGet]
@@ -76,18 +81,24 @@ public class AuctionsController : ControllerBase
         }
         else
         {
-
             var auction = this._mapper.Map<Models.Auction>(request);
 
             auction.Seller = "TestSeller";
 
             _context.Auctions.Add(auction);
 
+            var newAuction = _mapper.Map<DTO.Auction>(auction);
+
+            await _publishEndpoint.Publish(_mapper.Map<AuctionCreated>(newAuction));
+
             var result = await _context.SaveChangesAsync() > 0;
 
             if(!result) response = this.BadRequest("Unable to save changes to the database");
-
-            response = this.Created( new Uri($"http://localhost:7001/api/auctions/{auction.Id}"), this._mapper.Map<DTO.Auction>(auction));
+            
+            else
+            {
+                response = this.Created( new Uri($"http://localhost:7001/api/auctions/{auction.Id}"), this._mapper.Map<DTO.Auction>(auction));
+            }
         }
 
         return response;
@@ -117,6 +128,8 @@ public class AuctionsController : ControllerBase
                 auction.Item.Mileage = updateRequest.Mileage ?? auction.Item.Mileage;
                 auction.Item.Year = updateRequest.Year ?? auction.Item.Year;
 
+                await _publishEndpoint.Publish(_mapper.Map<AuctionUpdated>(auction));
+
                 var result = await _context.SaveChangesAsync() > 0;
 
                 if(!result) response = this.BadRequest("Unable to save changes to the database");
@@ -134,7 +147,7 @@ public class AuctionsController : ControllerBase
             }
             catch (Exception e)
             {
-                response = this.StatusCode((int)HttpStatusCode.InternalServerError, e.Message + " - " + e.InnerException.Message);
+                response = this.StatusCode((int)HttpStatusCode.InternalServerError, e.Message);
             }
             
         }
@@ -156,6 +169,8 @@ public class AuctionsController : ControllerBase
         else
         {
             _context.Auctions.Remove(auction);
+
+            await _publishEndpoint.Publish<AuctionDeleted>(new {Id = auction.Id.ToString()});
 
             var result = await _context.SaveChangesAsync() > 0;
 

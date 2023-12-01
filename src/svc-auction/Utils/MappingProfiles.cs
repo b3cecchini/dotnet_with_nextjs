@@ -2,6 +2,7 @@
 using svc_auction.Models;
 using AutoMapper;
 using System.Diagnostics.Contracts;
+using Contracts;
 
 namespace svc_auction.Utils;
 
@@ -14,8 +15,8 @@ public class MappingProfiles : Profile
         CreateMap<AuctionCreateRequest, Models.Auction>()
             .ForMember(d => d.Item, o => o.MapFrom(s => s));
         CreateMap<AuctionCreateRequest, Item>();
-        CreateMap<DTO.Auction, AuctionCreateResponse>();
-        // CreateMap<Auction, AuctionUpdated>().IncludeMembers(a => a.Item);
-        // CreateMap<Item, AuctionUpdated>();
+        CreateMap<DTO.Auction, AuctionCreated>();
+        CreateMap<Models.Auction, AuctionUpdated>().IncludeMembers(a => a.Item);
+        CreateMap<Item, AuctionUpdated>();
     }
 }
