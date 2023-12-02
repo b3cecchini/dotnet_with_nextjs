@@ -7,6 +7,7 @@ using AutoMapper;
 using AutoMapper.QueryableExtensions;
 using Contracts;
 using MassTransit;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Internal;
@@ -70,6 +71,7 @@ public class AuctionsController : ControllerBase
         return response;
     }
 
+    [Authorize]
     [HttpPost]
     public async Task<IActionResult> CreateAuctionAsync(AuctionCreateRequest request)
     {
@@ -83,7 +85,7 @@ public class AuctionsController : ControllerBase
         {
             var auction = this._mapper.Map<Models.Auction>(request);
 
-            auction.Seller = "TestSeller";
+            auction.Seller = User.Identity.Name;
 
             _context.Auctions.Add(auction);
 
@@ -122,6 +124,9 @@ public class AuctionsController : ControllerBase
 
                 if (auction == null) response = this.NotFound();
 
+                else if (auction.Seller != User.Identity.Name) return Forbid();
+
+                else
                 auction.Item.Make = updateRequest.Make ?? auction.Item.Make;
                 auction.Item.Model = updateRequest.Model ?? auction.Item.Model;
                 auction.Item.Color = updateRequest.Color ?? auction.Item.Color;
@@ -154,6 +159,7 @@ public class AuctionsController : ControllerBase
         return response;
     }
 
+    [Authorize]
     [HttpDelete]
     [Route("{id}")]
     public async Task<ActionResult> DeleteAuctionByIdAsync([FromRoute] Guid id)
@@ -164,7 +170,11 @@ public class AuctionsController : ControllerBase
 
         if(auction == null)
         {
-            response = this.NotFound();
+            response = this.NotFound("Auction not found in DB");
+        }
+        else if (auction.Seller != User.Identity.Name)
+        {
+            response = this.Forbid("Current user is not the seller of this auction");
         }
         else
         {
