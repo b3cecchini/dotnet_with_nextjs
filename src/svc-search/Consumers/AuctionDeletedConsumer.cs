@@ -4,7 +4,7 @@ using MassTransit;
 using MongoDB.Entities;
 
 
-namespace svc_search;
+namespace svc_search.Consumers;
 
 public class AuctionDeletedConsumer : IConsumer<AuctionDeleted>
 {
