@@ -16,6 +16,7 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
         options.RequireHttpsMetadata = false;
         options.TokenValidationParameters.ValidateAudience = false;
         options.TokenValidationParameters.NameClaimType = "username";
+        options.ClaimsIssuer = builder.Configuration["IdentityServiceUrl"];
     });
 
 // builder.Services.AddCors(options => 
@@ -30,6 +31,7 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 var app = builder.Build();
 
 // app.UseCors();
+
 
 app.MapReverseProxy();
 
