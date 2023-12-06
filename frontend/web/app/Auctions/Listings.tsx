@@ -6,10 +6,10 @@ import { PagedResult, Auction } from '../types'
 import AppPagination from '../components/AppPagination'
 import { GetData } from '../Actions/AuctionActions'
 import Filters from './Filters'
-import { useParams } from 'next/navigation'
 import { useParamsStore } from '@/hooks/useParamsStore'
 import { shallow } from 'zustand/shallow'
 import qs from 'query-string'
+import EmptyFilter from '../components/EmptyFilter'
 
 
 export default function Listings() {
@@ -17,11 +17,11 @@ export default function Listings() {
     const params = useParamsStore(state => ({
       pageNumber: state.pageNumber,
       pageSize: state.pageSize,
-      searchTems: state.searchTerms
+      searchTerms: state.searchTerms
     }), shallow)
 
     const setParams = useParamsStore(state => state.setParams)
-    const url = qs.stringify({url: '', query: params})
+    const url = qs.stringify(params)
 
     function setPageNumber(pageNumber: number) {
       setParams({pageNumber: pageNumber})
@@ -34,6 +34,8 @@ export default function Listings() {
     }, [url])
     
   if (!data) return <h3> Loading... </h3> 
+
+  if (data.totalCount == 0) return <EmptyFilter showReset/>
   return (
     <>
     <Filters />

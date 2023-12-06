@@ -22,7 +22,7 @@ export default function Search() {
             type="text" 
             value={searchValue}
             placeholder="Search by make, model, or color"
-            className="flex-grow padding-left-5 bg-transparent focus:outline-none focus:border-none focus:ring-0 text-sm text-gray-200 "
+            className="flex-grow padding-left-5 bg-transparent focus:outline-none focus:border-none focus:ring-0 text-sm text-gray-900 "
             onChange={changeSearchValue}
             onKeyDown={(e: any) => {if (e.key == "Enter") search()}}/>
             <button onClick={search}>
